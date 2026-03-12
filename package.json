@@ -20,7 +20,8 @@
         "dashboard:build": "npm --prefix dashboard run build",
         "dashboard:serve": "npm --prefix dashboard run serve",
         "test:load": "node load-test.js",
-        "test:load:quick": "node load-test-quick.js"
+        "test:load:quick": "node load-test-quick.js",
+        "sync:template": "node cli/sync-template.js"
     },
     "keywords": [
         "boilerplate",
