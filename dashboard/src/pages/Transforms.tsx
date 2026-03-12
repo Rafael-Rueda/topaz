@@ -193,8 +193,8 @@ export function Transforms() {
                     </Card>
                 ) : (
                     transforms.map((t) => (
-                        <Card key={t.id} className="!bg-gray-900 !border-gray-800 !ring-0">
-                            <div className="flex items-start justify-between gap-4">
+                        <Card key={t.id} className="!bg-gray-900 !border-gray-800 !ring-0 max-w-full overflow-hidden">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Badge color="topaz" size="xs">
@@ -207,12 +207,14 @@ export function Transforms() {
                                     </div>
                                     <div className="mt-2">
                                         <p className="mb-1 text-gray-500 text-xs">Mapping:</p>
-                                        <p className="truncate font-mono text-gray-300 text-sm">
-                                            {formatMapping(t.mapping)}
-                                        </p>
+                                        <div className="max-w-full overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(55 65 81) transparent' }}>
+                                            <p className="whitespace-nowrap font-mono text-gray-300 text-sm">
+                                                {formatMapping(t.mapping)}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex shrink-0 items-center gap-1.5">
+                                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                                     <button
                                         onClick={() => startEdit(t)}
                                         className="rounded-md border border-topaz-500/20 bg-topaz-500/10 px-3 py-1.5 font-medium text-topaz-400 text-xs transition-all hover:bg-topaz-500/20"

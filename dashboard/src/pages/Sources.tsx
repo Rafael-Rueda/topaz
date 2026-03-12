@@ -184,8 +184,8 @@ export function Sources() {
                     </Card>
                 ) : (
                     sources.map((s) => (
-                        <Card key={s.id} className="!bg-gray-900 !border-gray-800 !ring-0">
-                            <div className="flex items-start justify-between gap-4">
+                        <Card key={s.id} className="!bg-gray-900 !border-gray-800 !ring-0 max-w-full overflow-hidden">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Badge color="topaz" size="xs">
@@ -195,7 +195,7 @@ export function Sources() {
                                             {s.active ? "Active" : "Inactive"}
                                         </Badge>
                                     </div>
-                                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                                    <div className="mt-2 grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                                         <div>
                                             <span className="text-gray-500">Signature Header:</span>{" "}
                                             <span className="text-gray-300">{s.signatureHeader ?? "—"}</span>
@@ -220,7 +220,7 @@ export function Sources() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex shrink-0 items-center gap-1.5">
+                                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                                     <button
                                         onClick={() => startEdit(s)}
                                         className="rounded-md border border-topaz-500/20 bg-topaz-500/10 px-3 py-1.5 font-medium text-topaz-400 text-xs transition-all hover:bg-topaz-500/20"
@@ -310,7 +310,7 @@ export function Sources() {
 
                             <div className="border-gray-800 border-t pt-4">
                                 <p className="mb-3 text-gray-400 text-xs">Signature Verification (optional)</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="mb-1 block text-gray-400 text-sm">Header Name</label>
                                         <input
@@ -352,7 +352,7 @@ export function Sources() {
 
                             <div className="border-gray-800 border-t pt-4">
                                 <p className="mb-3 text-gray-400 text-xs">Deduplication (optional)</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="mb-1 block text-gray-400 text-sm">Field Path</label>
                                         <input
@@ -378,7 +378,7 @@ export function Sources() {
 
                             <div className="border-gray-800 border-t pt-4">
                                 <p className="mb-3 text-gray-400 text-xs">Rate Limiting (optional)</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
                                         <label className="mb-1 block text-gray-400 text-sm">Max Requests</label>
                                         <input

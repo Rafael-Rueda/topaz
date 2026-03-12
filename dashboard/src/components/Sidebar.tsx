@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const nav = [
     {
@@ -43,51 +44,138 @@ const nav = [
     },
 ];
 
-export function Sidebar() {
+function MenuIcon({ open }: { open: boolean }) {
     return (
-        <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-gray-800 border-r bg-gray-900">
-            {/* Logo */}
-            <div className="flex h-16 items-center gap-3 border-gray-800 border-b px-6">
-                <img src="/logo.png" alt="Topaz" className="h-8 w-8 rounded-lg object-contain" />
-                <div>
-                    <h1 className="font-semibold text-sm text-white">Topaz</h1>
-                    <p className="text-gray-500 text-xs">Ingestion Dashboard</p>
+        <svg
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+        >
+            {open ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            )}
+        </svg>
+    );
+}
+
+export function Sidebar() {
+    const [isOpen, setIsOpen] = useState(false);
+    const location = useLocation();
+
+    // Close mobile menu when route changes
+    useEffect(() => {
+        setIsOpen(false);
+    }, [location]);
+
+    // Close mobile menu when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            const target = event.target as HTMLElement;
+            // Don't close if clicking on sidebar or menu button
+            if (isOpen && !target.closest('[data-sidebar]') && !target.closest('[data-menu-button]')) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
+
+    return (
+        <>
+            {/* Mobile Header */}
+            <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-4 md:hidden">
+                <div className="flex items-center gap-3">
+                    <img src="/logo.png" alt="Topaz" className="h-8 w-8 rounded-lg object-contain" />
+                    <div>
+                        <h1 className="font-semibold text-sm text-white">Topaz</h1>
+                        <p className="text-gray-500 text-xs">Ingestion Dashboard</p>
+                    </div>
                 </div>
-            </div>
+                <button
+                    data-menu-button
+                    onClick={() => setIsOpen((prev) => !prev)}
+                    className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
+                    aria-label={isOpen ? "Close menu" : "Open menu"}
+                >
+                    <MenuIcon open={isOpen} />
+                </button>
+            </header>
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1 px-3 py-4">
-                {nav.map((item) => (
-                    <NavLink
-                        key={item.to}
-                        to={item.to}
-                        end={item.to === "/"}
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-sm transition-colors ${
-                                isActive
-                                    ? "bg-topaz-500/10 text-topaz-400"
-                                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
-                            }`
-                        }
-                    >
-                        <svg
-                            className="h-5 w-5 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={1.5}
+            {/* Mobile Menu Overlay */}
+            {isOpen && (
+                <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" />
+            )}
+
+            {/* Sidebar Navigation */}
+            <aside
+                data-sidebar
+                className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-gray-800 bg-gray-900 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+                    isOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+            >
+                {/* Logo - hidden on mobile (shown in header) */}
+                <div className="hidden h-16 items-center gap-3 border-b border-gray-800 px-6 md:flex">
+                    <img src="/logo.png" alt="Topaz" className="h-8 w-8 rounded-lg object-contain" />
+                    <div>
+                        <h1 className="font-semibold text-sm text-white">Topaz</h1>
+                        <p className="text-gray-500 text-xs">Ingestion Dashboard</p>
+                    </div>
+                </div>
+
+                {/* Spacer for mobile (header height) */}
+                <div className="h-16 md:hidden" />
+
+                {/* Navigation */}
+                <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+                    {nav.map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            end={item.to === "/"}
+                            onClick={() => setIsOpen(false)}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-sm transition-colors ${
+                                    isActive
+                                        ? "bg-topaz-500/10 text-topaz-400"
+                                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                                }`
+                            }
                         >
-                            <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                        </svg>
-                        {item.label}
-                    </NavLink>
-                ))}
-            </nav>
+                            <svg
+                                className="h-5 w-5 shrink-0"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={1.5}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                            </svg>
+                            {item.label}
+                        </NavLink>
+                    ))}
+                </nav>
 
-            {/* Footer */}
-            <div className="border-gray-800 border-t px-6 py-4">
-                <p className="text-gray-600 text-xs">Rueda Gems</p>
-            </div>
-        </aside>
+                {/* Footer */}
+                <div className="border-t border-gray-800 px-6 py-4">
+                    <p className="text-gray-600 text-xs">Rueda Gems</p>
+                </div>
+            </aside>
+        </>
     );
 }

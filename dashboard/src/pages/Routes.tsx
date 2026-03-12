@@ -172,8 +172,8 @@ export function Routes() {
                     </Card>
                 ) : (
                     routes.map((route) => (
-                        <Card key={route.id} className="!bg-gray-900 !border-gray-800 !ring-0">
-                            <div className="flex items-start justify-between gap-4">
+                        <Card key={route.id} className="!bg-gray-900 !border-gray-800 !ring-0 max-w-full overflow-hidden">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Badge color="topaz" size="xs">
@@ -194,16 +194,18 @@ export function Routes() {
                                             <span className="text-gray-500">Target:</span>{" "}
                                             <span className="font-mono">{route.targetName}</span>
                                         </p>
-                                        <p className="truncate text-gray-500 text-xs">
-                                            {route.method} {route.targetUrl}
-                                        </p>
+                                        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                                            <p className="whitespace-nowrap text-gray-500 text-xs">
+                                                {route.method} {route.targetUrl}
+                                            </p>
+                                        </div>
                                         <p className="text-gray-600 text-xs">
                                             Timeout: {route.timeout}ms | Retries: {route.retryCount} (
                                             {route.retryBackoff})
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex shrink-0 items-center gap-1.5">
+                                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                                     <button
                                         onClick={() => setEditingRoute(route)}
                                         className="rounded-md border border-topaz-500/20 bg-topaz-500/10 px-3 py-1.5 font-medium text-topaz-400 text-xs transition-all hover:bg-topaz-500/20"
@@ -250,7 +252,7 @@ export function Routes() {
                     >
                         <Title className="!text-white mb-4">Edit Route</Title>
                         <form onSubmit={handleUpdate} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <label className="mb-1 block text-gray-400 text-sm">Source</label>
                                     <input
@@ -294,7 +296,7 @@ export function Routes() {
                                     placeholder="payment-processor"
                                 />
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <div>
                                     <label className="mb-1 block text-gray-400 text-sm">Method</label>
                                     <select
@@ -338,7 +340,7 @@ export function Routes() {
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <label className="mb-1 block text-gray-400 text-sm">Retry Count</label>
                                     <input
@@ -443,7 +445,7 @@ export function Routes() {
                                     placeholder="payment-processor"
                                 />
                             </div>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <div>
                                     <label className="mb-1 block text-gray-400 text-sm">Method</label>
                                     <select
@@ -481,7 +483,7 @@ export function Routes() {
                                     />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <label className="mb-1 block text-gray-400 text-sm">Retry Count</label>
                                     <input
