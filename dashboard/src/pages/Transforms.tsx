@@ -207,7 +207,13 @@ export function Transforms() {
                                     </div>
                                     <div className="mt-2">
                                         <p className="mb-1 text-gray-500 text-xs">Mapping:</p>
-                                        <div className="max-w-full overflow-x-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(55 65 81) transparent' }}>
+                                        <div
+                                            className="max-w-full overflow-x-auto"
+                                            style={{
+                                                scrollbarWidth: "thin",
+                                                scrollbarColor: "rgb(55 65 81) transparent",
+                                            }}
+                                        >
                                             <p className="whitespace-nowrap font-mono text-gray-300 text-sm">
                                                 {formatMapping(t.mapping)}
                                             </p>

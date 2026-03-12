@@ -15,8 +15,8 @@ export function createPrismaClient(): PrismaClient {
     // See: https://node-postgres.com/features/pooling
     poolInstance = new Pool({
         connectionString: env.DATABASE_URL,
-        max: env.DB_POOL_MAX ?? 20,              // Maximum number of clients in the pool
-        min: env.DB_POOL_MIN ?? 5,               // Minimum number of clients in the pool
+        max: env.DB_POOL_MAX ?? 20, // Maximum number of clients in the pool
+        min: env.DB_POOL_MIN ?? 5, // Minimum number of clients in the pool
         idleTimeoutMillis: env.DB_POOL_IDLE_TIMEOUT ?? 30000, // Close idle clients after 30s
         connectionTimeoutMillis: env.DB_POOL_CONNECTION_TIMEOUT ?? 5000, // Timeout for new connections
     });

@@ -61,7 +61,10 @@ export class WebhookController {
 
             // Postgres failed → 500 → emitter retries
             const err = error instanceof Error ? error : new Error(String(error));
-            this.deps.logger.error({ err: { message: err.message, stack: err.stack }, source }, "Failed to persist webhook");
+            this.deps.logger.error(
+                { err: { message: err.message, stack: err.stack }, source },
+                "Failed to persist webhook",
+            );
             reply.status(500).send({
                 error: "Internal Server Error",
                 message: err.message,

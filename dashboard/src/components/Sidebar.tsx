@@ -1,5 +1,5 @@
+import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
 
 const nav = [
     {
@@ -46,13 +46,7 @@ const nav = [
 
 function MenuIcon({ open }: { open: boolean }) {
     return (
-        <svg
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-        >
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             {open ? (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             ) : (
@@ -76,30 +70,30 @@ export function Sidebar() {
         function handleClickOutside(event: MouseEvent) {
             const target = event.target as HTMLElement;
             // Don't close if clicking on sidebar or menu button
-            if (isOpen && !target.closest('[data-sidebar]') && !target.closest('[data-menu-button]')) {
+            if (isOpen && !target.closest("[data-sidebar]") && !target.closest("[data-menu-button]")) {
                 setIsOpen(false);
             }
         }
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [isOpen]);
 
     // Prevent body scroll when mobile menu is open
     useEffect(() => {
         if (isOpen) {
-            document.body.style.overflow = 'hidden';
+            document.body.style.overflow = "hidden";
         } else {
-            document.body.style.overflow = '';
+            document.body.style.overflow = "";
         }
         return () => {
-            document.body.style.overflow = '';
+            document.body.style.overflow = "";
         };
     }, [isOpen]);
 
     return (
         <>
             {/* Mobile Header */}
-            <header className="fixed left-0 right-0 top-0 z-50 flex h-16 items-center justify-between border-b border-gray-800 bg-gray-900 px-4 md:hidden">
+            <header className="fixed top-0 right-0 left-0 z-50 flex h-16 items-center justify-between border-gray-800 border-b bg-gray-900 px-4 md:hidden">
                 <div className="flex items-center gap-3">
                     <img src="/logo.png" alt="Topaz" className="h-8 w-8 rounded-lg object-contain" />
                     <div>
@@ -118,19 +112,17 @@ export function Sidebar() {
             </header>
 
             {/* Mobile Menu Overlay */}
-            {isOpen && (
-                <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" />
-            )}
+            {isOpen && <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" />}
 
             {/* Sidebar Navigation */}
             <aside
                 data-sidebar
-                className={`fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r border-gray-800 bg-gray-900 transition-transform duration-300 ease-in-out md:translate-x-0 ${
-                    isOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed top-0 left-0 z-50 flex h-full w-64 flex-col border-gray-800 border-r bg-gray-900 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+                    isOpen ? "translate-x-0" : "-translate-x-full"
                 }`}
             >
                 {/* Logo - hidden on mobile (shown in header) */}
-                <div className="hidden h-16 items-center gap-3 border-b border-gray-800 px-6 md:flex">
+                <div className="hidden h-16 items-center gap-3 border-gray-800 border-b px-6 md:flex">
                     <img src="/logo.png" alt="Topaz" className="h-8 w-8 rounded-lg object-contain" />
                     <div>
                         <h1 className="font-semibold text-sm text-white">Topaz</h1>
@@ -172,7 +164,7 @@ export function Sidebar() {
                 </nav>
 
                 {/* Footer */}
-                <div className="border-t border-gray-800 px-6 py-4">
+                <div className="border-gray-800 border-t px-6 py-4">
                     <p className="text-gray-600 text-xs">Rueda Gems</p>
                 </div>
             </aside>

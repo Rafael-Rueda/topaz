@@ -172,7 +172,10 @@ export function Routes() {
                     </Card>
                 ) : (
                     routes.map((route) => (
-                        <Card key={route.id} className="!bg-gray-900 !border-gray-800 !ring-0 max-w-full overflow-hidden">
+                        <Card
+                            key={route.id}
+                            className="!bg-gray-900 !border-gray-800 !ring-0 max-w-full overflow-hidden"
+                        >
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
@@ -194,7 +197,7 @@ export function Routes() {
                                             <span className="text-gray-500">Target:</span>{" "}
                                             <span className="font-mono">{route.targetName}</span>
                                         </p>
-                                        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                                        <div className="scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent overflow-x-auto">
                                             <p className="whitespace-nowrap text-gray-500 text-xs">
                                                 {route.method} {route.targetUrl}
                                             </p>
