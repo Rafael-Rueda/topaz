@@ -32,3 +32,9 @@ coverage/
 # Temp
 .tmp/
 temp/
+
+*.md
+!README.md
+
+/src/generated/prisma
+load-test-report-*.json

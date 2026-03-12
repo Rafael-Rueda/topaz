@@ -1,6 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
-import type { IngestWebhookUseCase } from "../../../domain/ingestion/application/use-cases/ingest-webhook.use-case.js";
+import {
+    type IngestWebhookUseCase,
+    SchemaValidationError,
+} from "../../../domain/ingestion/application/use-cases/ingest-webhook.use-case.js";
 import type { Logger } from "../../../infra/config/logger.js";
 
 interface WebhookParams {
@@ -29,16 +32,39 @@ export class WebhookController {
                 signature,
             });
 
-            this.deps.logger.info({ jobId: result.id, source }, "Webhook queued");
+            if (result.duplicate) {
+                this.deps.logger.info({ eventId: result.id, source }, "Duplicate webhook ignored");
+                reply.status(202).send({
+                    status: "duplicate",
+                    eventId: result.id,
+                    message: "Duplicate event — already received",
+                });
+                return;
+            }
+
+            this.deps.logger.info({ eventId: result.id, source }, "Webhook persisted and queued");
 
             reply.status(202).send({
                 status: "accepted",
-                jobId: result.id,
-                message: "Payload queued for processing",
+                eventId: result.id,
+                message: "Payload persisted and queued for processing",
             });
         } catch (error) {
-            this.deps.logger.error({ error, source }, "Failed to queue webhook");
-            throw error;
+            if (error instanceof SchemaValidationError) {
+                reply.status(400).send({
+                    error: "Schema validation failed",
+                    statusCode: 400,
+                    validationErrors: error.errors,
+                });
+                return;
+            }
+
+            // Postgres failed → 500 → emitter retries
+            this.deps.logger.error({ error, source }, "Failed to persist webhook");
+            reply.status(500).send({
+                error: "Internal Server Error",
+                statusCode: 500,
+            });
         }
     }
 }

@@ -25,7 +25,7 @@ export async function webhookRoutes(app: FastifyInstance, container: AppContaine
                         type: "object",
                         properties: {
                             status: { type: "string" },
-                            jobId: { type: "string" },
+                            eventId: { type: "string" },
                             message: { type: "string" },
                         },
                     },

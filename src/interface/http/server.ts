@@ -4,7 +4,7 @@ import multipart from "@fastify/multipart";
 import Fastify, { type FastifyError } from "fastify";
 
 import { registerRoutes } from "./routes/index.js";
-import { env, logger } from "../../infra/config/index.js";
+import { disconnectPrisma, env, logger } from "../../infra/config/index.js";
 import { createAppContainer, disposeContainer } from "../../infra/di/container.js";
 
 async function buildServer() {
@@ -72,7 +72,12 @@ async function main(): Promise<void> {
     const shutdown = async (signal: string): Promise<void> => {
         logger.info({ signal }, "Shutdown signal received");
 
+        // Flush pending buffer before closing
+        const webhookBuffer = container.resolve("webhookBuffer");
+        await webhookBuffer.shutdown();
+
         await app.close();
+        await disconnectPrisma();
         await disposeContainer();
 
         logger.info("Server shutdown complete");

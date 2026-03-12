@@ -2,7 +2,7 @@ import type { BatchRecordProps } from "../../enterprise/entities/batch-record.js
 import type { WebhookPayloadProps } from "../../enterprise/entities/webhook-payload.js";
 
 export interface IWebhookQueueProducer {
-    enqueue(payload: WebhookPayloadProps): Promise<string>;
+    enqueue(payload: WebhookPayloadProps, isReplay?: boolean): Promise<string>;
 }
 
 export interface IBatchQueueProducer {

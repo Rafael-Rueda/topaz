@@ -25,9 +25,12 @@ export class WebhookQueueProducer implements IWebhookQueueProducer {
         });
     }
 
-    async enqueue(payload: WebhookPayloadProps): Promise<string> {
+    async enqueue(payload: WebhookPayloadProps, isReplay = false): Promise<string> {
+        // For replays, use a unique jobId to avoid collision with failed jobs
+        const jobId = isReplay ? `${payload.id}:replay:${Date.now()}` : payload.id;
+
         const job = await this.queue.add(`webhook:${payload.source}`, payload, {
-            jobId: payload.id,
+            jobId,
         });
 
         return job.id ?? payload.id;

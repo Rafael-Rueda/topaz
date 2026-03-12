@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { z } from "zod";
 
 const envSchema = z.object({
@@ -18,6 +19,16 @@ const envSchema = z.object({
 
     // Batch Processing
     BATCH_CHUNK_SIZE: z.coerce.number().default(500),
+
+    // Database
+    DATABASE_URL: z.string(),
+
+    // Buffer (micro-batch)
+    BUFFER_FLUSH_INTERVAL: z.coerce.number().default(50),
+    BUFFER_MAX_SIZE: z.coerce.number().default(500),
+
+    // Reconciliation
+    STRIPE_SECRET_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -7,6 +7,7 @@ export const WebhookPayloadSchema = z.object({
     headers: z.record(z.string()),
     body: z.unknown(),
     signature: z.string().optional(),
+    eventType: z.string().nullish(),
 });
 
 export type WebhookPayloadProps = z.infer<typeof WebhookPayloadSchema>;
@@ -40,6 +41,10 @@ export class WebhookPayload {
 
     get signature(): string | undefined {
         return this.props.signature;
+    }
+
+    get eventType(): string | null | undefined {
+        return this.props.eventType;
     }
 
     toJSON(): WebhookPayloadProps {

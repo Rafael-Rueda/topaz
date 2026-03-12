@@ -1,44 +1,173 @@
-### Topaz API - Ingestion & Interoperability
-### Base URL
+### Topaz API - Complete Test Flow
+### Run requests top-to-bottom to test all features
+### Base URL (default port from env.ts)
 @baseUrl = http://localhost:3333
 
+
 ### ============================================
-### Health Checks
+### 1. HEALTH — Verify services are up
 ### ============================================
 
-### Health Check - Full status
+### 1.1 Full health check (Postgres + Redis)
 GET {{baseUrl}}/health
 
-### Readiness Probe (Kubernetes)
+### 1.2 Readiness probe (Kubernetes)
 GET {{baseUrl}}/health/ready
 
-### Liveness Probe (Kubernetes)
+### 1.3 Liveness probe (Kubernetes)
 GET {{baseUrl}}/health/live
 
 
 ### ============================================
-### Flow A: Webhook Flash Ingest
+### 2. SCHEMAS — Create validation rules FIRST
+###    (so incoming webhooks get validated)
 ### ============================================
 
-### Webhook - Payment Gateway (Stripe)
+### 2.1 Create schema for Stripe payment events
+POST {{baseUrl}}/schemas
+Content-Type: application/json
+
+{
+    "source": "stripe",
+    "eventType": "payment_intent.succeeded",
+    "schema": {
+        "type": "object",
+        "required": ["type", "data"],
+        "properties": {
+            "type": { "type": "string" },
+            "data": {
+                "type": "object",
+                "required": ["object"],
+                "properties": {
+                    "object": {
+                        "type": "object",
+                        "required": ["id", "amount", "currency"],
+                        "properties": {
+                            "id": { "type": "string" },
+                            "amount": { "type": "number", "minimum": 0 },
+                            "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "rejectOnFail": false
+}
+
+### 2.2 Create strict schema for Stripe refunds (rejects invalid payloads)
+POST {{baseUrl}}/schemas
+Content-Type: application/json
+
+{
+    "source": "stripe",
+    "eventType": "charge.refunded",
+    "schema": {
+        "type": "object",
+        "required": ["type", "data"],
+        "properties": {
+            "type": { "type": "string" },
+            "data": {
+                "type": "object",
+                "required": ["object"],
+                "properties": {
+                    "object": {
+                        "type": "object",
+                        "required": ["id", "amount_refunded"],
+                        "properties": {
+                            "id": { "type": "string" },
+                            "amount_refunded": { "type": "number" }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "rejectOnFail": true
+}
+
+### 2.3 List all schemas
+GET {{baseUrl}}/schemas
+
+### 2.4 List schemas by source
+GET {{baseUrl}}/schemas/source/stripe
+
+### 2.5 Get active schema for specific source + event type
+GET {{baseUrl}}/schemas/source/stripe/payment_intent.succeeded
+
+
+### ============================================
+### 3. WEBHOOKS — Ingest events (the core flow)
+###    Events: persist → buffer → Postgres → Redis queue
+### ============================================
+
+### 3.1 Stripe — valid payment (matches schema)
 POST {{baseUrl}}/webhooks/stripe
 Content-Type: application/json
 X-Webhook-Signature: sha256=abc123
 
 {
-    "id": "evt_123456",
+    "id": "evt_001",
     "type": "payment_intent.succeeded",
     "data": {
         "object": {
-            "id": "pi_123456",
-            "amount": 2000,
+            "id": "pi_001",
+            "amount": 9990,
             "currency": "brl",
             "status": "succeeded"
         }
     }
 }
 
-### Webhook - Payment Gateway (PagSeguro)
+### 3.2 Stripe — another payment
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_002",
+    "type": "payment_intent.succeeded",
+    "data": {
+        "object": {
+            "id": "pi_002",
+            "amount": 15000,
+            "currency": "usd",
+            "status": "succeeded"
+        }
+    }
+}
+
+### 3.3 Stripe — payment with invalid schema (amount is string, not number)
+### Should still accept (rejectOnFail=false) but mark as INVALID
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_003",
+    "type": "payment_intent.succeeded",
+    "data": {
+        "object": {
+            "id": "pi_003",
+            "amount": "not_a_number",
+            "currency": "brl"
+        }
+    }
+}
+
+### 3.4 Stripe — refund with INVALID payload (strict mode → should be rejected 400)
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_004",
+    "type": "charge.refunded",
+    "data": {
+        "object": {
+            "id": "re_001"
+        }
+    }
+}
+
+### 3.5 PagSeguro — no schema defined (validation=SKIPPED)
 POST {{baseUrl}}/webhooks/pagseguro
 Content-Type: application/json
 
@@ -47,7 +176,7 @@ Content-Type: application/json
     "notificationType": "transaction"
 }
 
-### Webhook - Marketing (Mailchimp)
+### 3.6 Mailchimp — subscriber event
 POST {{baseUrl}}/webhooks/mailchimp
 Content-Type: application/json
 
@@ -60,7 +189,7 @@ Content-Type: application/json
     }
 }
 
-### Webhook - CRM (HubSpot)
+### 3.7 HubSpot — CRM contact created
 POST {{baseUrl}}/webhooks/hubspot
 Content-Type: application/json
 
@@ -75,18 +204,283 @@ Content-Type: application/json
     }
 ]
 
+### 3.8 Shopify — order created
+POST {{baseUrl}}/webhooks/shopify
+Content-Type: application/json
+
+{
+    "type": "orders/create",
+    "data": {
+        "id": "order_789",
+        "total_price": "299.90",
+        "currency": "BRL",
+        "customer": {
+            "email": "cliente@example.com"
+        }
+    }
+}
+
+### 3.9 Bulk — fire 5 rapid events (simulates burst traffic)
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_burst_1",
+    "type": "payment_intent.succeeded",
+    "data": { "object": { "id": "pi_b1", "amount": 1000, "currency": "brl" } }
+}
+
+###
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_burst_2",
+    "type": "payment_intent.succeeded",
+    "data": { "object": { "id": "pi_b2", "amount": 2500, "currency": "brl" } }
+}
+
+###
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_burst_3",
+    "type": "payment_intent.succeeded",
+    "data": { "object": { "id": "pi_b3", "amount": 500, "currency": "brl" } }
+}
+
+###
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_burst_4",
+    "type": "payment_intent.succeeded",
+    "data": { "object": { "id": "pi_b4", "amount": 7800, "currency": "brl" } }
+}
+
+###
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_burst_5",
+    "type": "payment_intent.succeeded",
+    "data": { "object": { "id": "pi_b5", "amount": 3300, "currency": "brl" } }
+}
+
 
 ### ============================================
-### Flow B: CSV Batch Ingestion
+### 4. METRICS — Check system observability
 ### ============================================
 
-### Upload CSV File
-### Note: Replace the file path with your actual CSV file
+### 4.1 Full overview (throughput + status + errors + queues)
+GET {{baseUrl}}/metrics/overview
+
+### 4.2 Throughput by source (last 60 minutes)
+GET {{baseUrl}}/metrics/throughput
+
+### 4.3 Throughput (custom window - last 5 minutes)
+GET {{baseUrl}}/metrics/throughput?minutes=5
+
+### 4.4 Latency stats (p50, p95, p99 by source)
+GET {{baseUrl}}/metrics/latency
+
+### 4.5 Error rate and breakdown
+GET {{baseUrl}}/metrics/errors
+
+### 4.6 Error rate (last 5 minutes)
+GET {{baseUrl}}/metrics/errors?minutes=5
+
+### 4.7 Queue depths (BullMQ)
+GET {{baseUrl}}/metrics/queues
+
+### 4.8 DLQ summary (dead events by source and error)
+GET {{baseUrl}}/metrics/dlq
+
+
+### ============================================
+### 5. DLQ — Dead Letter Queue management
+### ============================================
+
+### 5.1 List dead events (default: limit=50)
+GET {{baseUrl}}/dlq
+
+### 5.2 List with filters
+GET {{baseUrl}}/dlq?source=stripe&limit=10
+
+### 5.3 List with pagination
+GET {{baseUrl}}/dlq?limit=5&offset=0
+
+### 5.4 Get single DLQ event detail (replace with real ID)
+GET {{baseUrl}}/dlq/REPLACE_WITH_EVENT_ID
+
+### 5.5 Discard single event (replace with real ID)
+POST {{baseUrl}}/dlq/REPLACE_WITH_EVENT_ID/discard
+
+### 5.6 Batch discard (replace with real IDs)
+POST {{baseUrl}}/dlq/discard
+Content-Type: application/json
+
+{
+    "ids": ["REPLACE_WITH_ID_1", "REPLACE_WITH_ID_2"]
+}
+
+
+### ============================================
+### 6. ALERTS — Configure monitoring rules
+### ============================================
+
+### 6.1 Create alert: high error rate
+POST {{baseUrl}}/alerts
+Content-Type: application/json
+
+{
+    "name": "High Error Rate",
+    "metric": "ERROR_RATE",
+    "threshold": 10,
+    "window": "5m",
+    "targetUrl": "https://httpbin.org/post",
+    "cooldown": "15m"
+}
+
+### 6.2 Create alert: queue backing up
+POST {{baseUrl}}/alerts
+Content-Type: application/json
+
+{
+    "name": "Queue Backlog",
+    "metric": "QUEUE_SIZE",
+    "threshold": 100,
+    "window": "1m",
+    "targetUrl": "https://httpbin.org/post",
+    "cooldown": "5m"
+}
+
+### 6.3 Create alert: too many dead events
+POST {{baseUrl}}/alerts
+Content-Type: application/json
+
+{
+    "name": "DLQ Growing",
+    "metric": "DLQ_SIZE",
+    "threshold": 5,
+    "window": "10m",
+    "targetUrl": "https://httpbin.org/post",
+    "cooldown": "30m"
+}
+
+### 6.4 Create alert: high latency
+POST {{baseUrl}}/alerts
+Content-Type: application/json
+
+{
+    "name": "High Latency P95",
+    "metric": "LATENCY_P95",
+    "threshold": 5000,
+    "window": "5m",
+    "targetUrl": "https://httpbin.org/post",
+    "cooldown": "10m"
+}
+
+### 6.5 Create alert: schema drift detected
+POST {{baseUrl}}/alerts
+Content-Type: application/json
+
+{
+    "name": "Schema Drift",
+    "metric": "SCHEMA_DRIFT",
+    "threshold": 3,
+    "window": "15m",
+    "targetUrl": "https://httpbin.org/post",
+    "cooldown": "1h"
+}
+
+### 6.6 List all alert rules
+GET {{baseUrl}}/alerts
+
+### 6.7 View alert firing history
+GET {{baseUrl}}/alerts/history
+
+### 6.8 View history for specific rule (replace with real ID)
+GET {{baseUrl}}/alerts/history?alertRuleId=REPLACE_WITH_RULE_ID&limit=20
+
+### 6.9 Update alert threshold (replace with real ID)
+PUT {{baseUrl}}/alerts/REPLACE_WITH_RULE_ID
+Content-Type: application/json
+
+{
+    "threshold": 20,
+    "window": "10m"
+}
+
+### 6.10 Deactivate alert (replace with real ID)
+DELETE {{baseUrl}}/alerts/REPLACE_WITH_RULE_ID
+
+
+### ============================================
+### 7. REPLAY — Re-process failed events
+### ============================================
+
+### 7.1 Preview: how many FAILED events from stripe?
+POST {{baseUrl}}/replay/preview
+Content-Type: application/json
+
+{
+    "filterSource": "stripe",
+    "filterStatus": "FAILED"
+}
+
+### 7.2 Preview: all DEAD events
+POST {{baseUrl}}/replay/preview
+Content-Type: application/json
+
+{
+    "filterStatus": "DEAD"
+}
+
+### 7.3 Preview: failed events in a time range
+POST {{baseUrl}}/replay/preview
+Content-Type: application/json
+
+{
+    "filterSource": "stripe",
+    "filterStatus": "FAILED",
+    "filterFrom": "2024-01-01T00:00:00.000Z",
+    "filterTo": "2030-12-31T23:59:59.999Z"
+}
+
+### 7.4 Execute replay (async — returns 202)
+POST {{baseUrl}}/replay/execute
+Content-Type: application/json
+
+{
+    "filterSource": "stripe",
+    "filterStatus": "FAILED",
+    "requestedBy": "admin"
+}
+
+### 7.5 List replay history
+GET {{baseUrl}}/replay/history
+
+### 7.6 Check replay status/progress (replace with real ID)
+GET {{baseUrl}}/replay/REPLACE_WITH_REPLAY_ID
+
+### 7.7 Cancel a running replay (replace with real ID)
+POST {{baseUrl}}/replay/REPLACE_WITH_REPLAY_ID/cancel
+
+
+### ============================================
+### 8. BATCH — CSV file ingestion
+### ============================================
+
+### 8.1 Upload CSV file
 POST {{baseUrl}}/ingest/batch
 Content-Type: multipart/form-data; boundary=----FormBoundary
 
 ------FormBoundary
-Content-Disposition: form-data; name="file"; filename="data.csv"
+Content-Disposition: form-data; name="file"; filename="transactions.csv"
 Content-Type: text/csv
 
 id,name,email,amount
@@ -95,4 +489,259 @@ id,name,email,amount
 3,Bob Wilson,bob@example.com,75.25
 4,Alice Brown,alice@example.com,300.00
 5,Charlie Davis,charlie@example.com,150.75
+6,Diana Evans,diana@example.com,420.00
+7,Edward Fox,edward@example.com,89.99
+8,Fiona Grant,fiona@example.com,175.50
+9,George Hill,george@example.com,550.00
+10,Helen Ivy,helen@example.com,62.30
 ------FormBoundary--
+
+
+### ============================================
+### 9. SCHEMA MANAGEMENT — Update & deactivate
+### ============================================
+
+### 9.1 Update schema to strict mode (replace with real ID)
+PUT {{baseUrl}}/schemas/REPLACE_WITH_SCHEMA_ID
+Content-Type: application/json
+
+{
+    "rejectOnFail": true
+}
+
+### 9.2 Deactivate schema (replace with real ID)
+DELETE {{baseUrl}}/schemas/REPLACE_WITH_SCHEMA_ID
+
+
+### ============================================
+### 10. E2E SCENARIO — Full payment flow
+###     Simulates: Stripe → Topaz → process → check
+### ============================================
+
+### 10.1 Send payment event
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_e2e_001",
+    "type": "payment_intent.succeeded",
+    "data": {
+        "object": {
+            "id": "pi_e2e_001",
+            "amount": 49990,
+            "currency": "brl",
+            "status": "succeeded",
+            "customer": "cus_abc123",
+            "metadata": {
+                "order_id": "ORD-2024-001",
+                "product": "Premium Plan"
+            }
+        }
+    }
+}
+
+### 10.2 Check it arrived in metrics
+GET {{baseUrl}}/metrics/overview
+
+### 10.3 Check queue stats (should show processing)
+GET {{baseUrl}}/metrics/queues
+
+### 10.4 Send a payment that will fail validation (strict schema)
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_e2e_002",
+    "type": "charge.refunded",
+    "data": {
+        "wrong_field": "this should be rejected"
+    }
+}
+
+### 10.5 Verify the invalid event was rejected (should return 400)
+### Previous request ↑ should already show the 400 response
+
+### 10.6 Check for schema drift in metrics
+GET {{baseUrl}}/metrics/errors
+
+
+### ============================================
+### 11. REPLAY TESTING — Create failed events & replay them
+### ============================================
+
+### 11.1 Send events that will FAIL (for replay testing)
+### These events have "_testFail": true in the payload
+### After 3 retry attempts, they become FAILED/DEAD
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_fail_001",
+    "type": "payment_intent.succeeded",
+    "_testFail": true,
+    "data": {
+        "object": {
+            "id": "pi_fail_001",
+            "amount": 9990,
+            "currency": "brl",
+            "status": "succeeded"
+        }
+    }
+}
+
+###
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_fail_002",
+    "type": "payment_intent.succeeded",
+    "_testFail": true,
+    "data": {
+        "object": {
+            "id": "pi_fail_002",
+            "amount": 15000,
+            "currency": "usd",
+            "status": "succeeded"
+        }
+    }
+}
+
+###
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+
+{
+    "id": "evt_fail_003",
+    "type": "payment_intent.succeeded",
+    "_testFail": true,
+    "data": {
+        "object": {
+            "id": "pi_fail_003",
+            "amount": 5000,
+            "currency": "brl",
+            "status": "succeeded"
+        }
+    }
+}
+
+### 11.2 Wait ~30 seconds for retries to complete, then check DLQ
+### Events should appear as FAILED/DEAD after all retry attempts
+GET {{baseUrl}}/dlq?source=stripe&limit=10
+
+### 11.3 Check metrics to see failed events
+GET {{baseUrl}}/metrics/overview
+
+### 11.4 Preview replay: how many FAILED events from stripe?
+POST {{baseUrl}}/replay/preview
+Content-Type: application/json
+
+{
+    "filterSource": "stripe",
+    "filterStatus": "FAILED"
+}
+
+### 11.5 Preview replay: DEAD events
+POST {{baseUrl}}/replay/preview
+Content-Type: application/json
+
+{
+    "filterSource": "stripe",
+    "filterStatus": "DEAD"
+}
+
+### 11.6 Execute replay of FAILED events
+### This will re-enqueue all FAILED events from stripe
+POST {{baseUrl}}/replay/execute
+Content-Type: application/json
+
+{
+    "filterSource": "stripe",
+    "filterStatus": "FAILED",
+    "requestedBy": "test-admin"
+}
+
+### 11.7 Execute replay of DEAD events (all sources)
+POST {{baseUrl}}/replay/execute
+Content-Type: application/json
+
+{
+    "filterStatus": "DEAD",
+    "requestedBy": "test-admin"
+}
+
+### 11.8 Check replay history
+GET {{baseUrl}}/replay/history
+
+### 11.9 Check specific replay status (replace ID from 11.6 or 11.7 response)
+### GET {{baseUrl}}/replay/REPLACE_REPLAY_ID
+
+
+### ============================================
+### 12. ROUTES — Configure event routing (fan-out)
+### ============================================
+
+### 12.1 Create a route (single target)
+POST {{baseUrl}}/routes
+Content-Type: application/json
+
+{
+    "source": "stripe",
+    "eventType": "payment_intent.succeeded",
+    "targetUrl": "https://httpbin.org/post",
+    "targetName": "payment-processor",
+    "method": "POST",
+    "timeout": 5000,
+    "retryCount": 3,
+    "priority": "CRITICAL"
+}
+
+### 12.2 Create another route for same event (fan-out)
+POST {{baseUrl}}/routes
+Content-Type: application/json
+
+{
+    "source": "stripe",
+    "eventType": "payment_intent.succeeded",
+    "targetUrl": "https://httpbin.org/post",
+    "targetName": "slack-notifications",
+    "method": "POST",
+    "timeout": 3000,
+    "retryCount": 1,
+    "priority": "LOW"
+}
+
+### 12.3 Create catch-all route (wildcard event type)
+POST {{baseUrl}}/routes
+Content-Type: application/json
+
+{
+    "source": "stripe",
+    "eventType": "*",
+    "targetUrl": "https://httpbin.org/post",
+    "targetName": "stripe-catchall",
+    "method": "POST",
+    "timeout": 10000,
+    "priority": "NORMAL"
+}
+
+### 12.4 List all routes
+GET {{baseUrl}}/routes
+
+### 12.5 List routes by source
+GET {{baseUrl}}/routes/source/stripe
+
+### 12.6 Update route timeout (replace with real ID)
+PUT {{baseUrl}}/routes/REPLACE_WITH_ROUTE_ID
+Content-Type: application/json
+
+{
+    "timeout": 10000,
+    "retryCount": 5
+}
+
+### 12.7 Deactivate route (replace with real ID)
+DELETE {{baseUrl}}/routes/REPLACE_WITH_ROUTE_ID
+
+### 12.8 Permanently delete route (replace with real ID)
+DELETE {{baseUrl}}/routes/REPLACE_WITH_ROUTE_ID/permanent
