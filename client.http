@@ -1,0 +1,98 @@
+### Topaz API - Ingestion & Interoperability
+### Base URL
+@baseUrl = http://localhost:3333
+
+### ============================================
+### Health Checks
+### ============================================
+
+### Health Check - Full status
+GET {{baseUrl}}/health
+
+### Readiness Probe (Kubernetes)
+GET {{baseUrl}}/health/ready
+
+### Liveness Probe (Kubernetes)
+GET {{baseUrl}}/health/live
+
+
+### ============================================
+### Flow A: Webhook Flash Ingest
+### ============================================
+
+### Webhook - Payment Gateway (Stripe)
+POST {{baseUrl}}/webhooks/stripe
+Content-Type: application/json
+X-Webhook-Signature: sha256=abc123
+
+{
+    "id": "evt_123456",
+    "type": "payment_intent.succeeded",
+    "data": {
+        "object": {
+            "id": "pi_123456",
+            "amount": 2000,
+            "currency": "brl",
+            "status": "succeeded"
+        }
+    }
+}
+
+### Webhook - Payment Gateway (PagSeguro)
+POST {{baseUrl}}/webhooks/pagseguro
+Content-Type: application/json
+
+{
+    "notificationCode": "ABC123-DEF456",
+    "notificationType": "transaction"
+}
+
+### Webhook - Marketing (Mailchimp)
+POST {{baseUrl}}/webhooks/mailchimp
+Content-Type: application/json
+
+{
+    "type": "subscribe",
+    "fired_at": "2024-01-15 10:30:00",
+    "data": {
+        "email": "user@example.com",
+        "list_id": "abc123"
+    }
+}
+
+### Webhook - CRM (HubSpot)
+POST {{baseUrl}}/webhooks/hubspot
+Content-Type: application/json
+
+[
+    {
+        "eventId": 1,
+        "subscriptionId": 12345,
+        "portalId": 67890,
+        "occurredAt": 1704067200000,
+        "eventType": "contact.creation",
+        "objectId": 123
+    }
+]
+
+
+### ============================================
+### Flow B: CSV Batch Ingestion
+### ============================================
+
+### Upload CSV File
+### Note: Replace the file path with your actual CSV file
+POST {{baseUrl}}/ingest/batch
+Content-Type: multipart/form-data; boundary=----FormBoundary
+
+------FormBoundary
+Content-Disposition: form-data; name="file"; filename="data.csv"
+Content-Type: text/csv
+
+id,name,email,amount
+1,John Doe,john@example.com,100.50
+2,Jane Smith,jane@example.com,250.00
+3,Bob Wilson,bob@example.com,75.25
+4,Alice Brown,alice@example.com,300.00
+5,Charlie Davis,charlie@example.com,150.75
+------FormBoundary--
