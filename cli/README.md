@@ -46,29 +46,29 @@ Your API is now running at `http://localhost:3000`
 
 ## Why Topaz?
 
-| Traditional Webhook Handlers | Topaz Approach |
-|------------------------------|----------------|
+| Traditional Webhook Handlers | Topaz Approach                             |
+| ---------------------------- | ------------------------------------------ |
 | Return 202 before persisting | Return 202 **only after** PostgreSQL write |
-| Lose events on Redis crash | Write-Ahead Log guarantees durability |
-| Silent failures | Schema validation with drift detection |
-| Manual replay only | Automated replay with filtering |
-| Single target delivery | Fan-out to multiple targets |
-| Hardcoded transformations | Declarative field mapping |
+| Lose events on Redis crash   | Write-Ahead Log guarantees durability      |
+| Silent failures              | Schema validation with drift detection     |
+| Manual replay only           | Automated replay with filtering            |
+| Single target delivery       | Fan-out to multiple targets                |
+| Hardcoded transformations    | Declarative field mapping                  |
 
 ## What's Included
 
-| Feature | Description |
-|---------|-------------|
-| **Write-Ahead Log** | Zero data loss — events persisted before queuing |
-| **Schema Validation** | JSON Schema validation with drift detection |
-| **Event Replay** | Automated replay with source, status, and date filters |
-| **Routing & Fan-out** | Deliver events to multiple targets with retry policies |
-| **Declarative Transforms** | Field mapping without writing code |
-| **Deduplication** | Configurable dedup window per source |
-| **Source Management** | HMAC signature verification, rate limiting |
-| **Alert Rules** | Webhook notifications for error rate, latency, DLQ size |
-| **Batch Processing** | Streaming CSV ingestion with chunked processing |
-| **Real-time Dashboard** | React + Tremor monitoring UI |
+| Feature                    | Description                                             |
+| -------------------------- | ------------------------------------------------------- |
+| **Write-Ahead Log**        | Zero data loss — events persisted before queuing        |
+| **Schema Validation**      | JSON Schema validation with drift detection             |
+| **Event Replay**           | Automated replay with source, status, and date filters  |
+| **Routing & Fan-out**      | Deliver events to multiple targets with retry policies  |
+| **Declarative Transforms** | Field mapping without writing code                      |
+| **Deduplication**          | Configurable dedup window per source                    |
+| **Source Management**      | HMAC signature verification, rate limiting              |
+| **Alert Rules**            | Webhook notifications for error rate, latency, DLQ size |
+| **Batch Processing**       | Streaming CSV ingestion with chunked processing         |
+| **Real-time Dashboard**    | React + Tremor monitoring UI                            |
 
 ## Architecture
 
@@ -76,17 +76,17 @@ Topaz follows **Clean Architecture** and **Domain-Driven Design**:
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                   Interface Layer                      │
-│   HTTP API (Fastify)  │  Dashboard (React)  │ Workers │
+│                   Interface Layer                    │
+│   HTTP API (Fastify)  │  Dashboard (React)  │ Workers│
 ├──────────────────────────────────────────────────────┤
-│                  Application Layer                     │
-│   IngestWebhook  │  ValidatePayload  │  ResolveRoutes │
-│   ExecuteReplay  │  ApplyTransform   │  Reconcile     │
+│                  Application Layer                   │
+│   IngestWebhook  │  ValidatePayload  │  ResolveRoutes│
+│   ExecuteReplay  │  ApplyTransform   │  Reconcile    │
 ├──────────────────────────────────────────────────────┤
-│                    Domain Layer                        │
-│   Event  │  Route  │  Delivery  │  Source  │  Schema  │
+│                    Domain Layer                      │
+│   Event  │  Route  │  Delivery  │  Source  │  Schema │
 ├──────────────────────────────────────────────────────┤
-│                Infrastructure Layer                    │
+│                Infrastructure Layer                  │
 │   PostgreSQL (WAL)  │  Redis (BullMQ)  │  Awilix DI  │
 └──────────────────────────────────────────────────────┘
 ```
@@ -117,28 +117,28 @@ prisma/                  # Database schema & migrations
 
 ### Core
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/webhooks/:source` | Ingest webhook |
-| `POST` | `/:source/batch` | Batch CSV upload |
-| `GET` | `/health` | Health check |
+| Method | Endpoint            | Description      |
+| ------ | ------------------- | ---------------- |
+| `POST` | `/webhooks/:source` | Ingest webhook   |
+| `POST` | `/:source/batch`    | Batch CSV upload |
+| `GET`  | `/health`           | Health check     |
 
 ### Configuration
 
-| Resource | Endpoints | Operations |
-|----------|-----------|------------|
-| **Sources** | `/sources` | Register, list, update webhook sources |
-| **Schemas** | `/schemas` | Define JSON Schema per event type |
-| **Routes** | `/routes` | Configure delivery targets & retry policies |
-| **Transforms** | `/transforms` | Declarative field mapping rules |
-| **Alerts** | `/alerts` | Metric-based alert rules |
+| Resource       | Endpoints     | Operations                                  |
+| -------------- | ------------- | ------------------------------------------- |
+| **Sources**    | `/sources`    | Register, list, update webhook sources      |
+| **Schemas**    | `/schemas`    | Define JSON Schema per event type           |
+| **Routes**     | `/routes`     | Configure delivery targets & retry policies |
+| **Transforms** | `/transforms` | Declarative field mapping rules             |
+| **Alerts**     | `/alerts`     | Metric-based alert rules                    |
 
 ### Operations
 
-| Resource | Endpoints | Operations |
-|----------|-----------|------------|
-| **Replay** | `/replay` | Preview, execute, track replays |
-| **DLQ** | `/dlq` | View & manage dead letter events |
+| Resource    | Endpoints  | Operations                          |
+| ----------- | ---------- | ----------------------------------- |
+| **Replay**  | `/replay`  | Preview, execute, track replays     |
+| **DLQ**     | `/dlq`     | View & manage dead letter events    |
 | **Metrics** | `/metrics` | Throughput, latency, errors, queues |
 
 ## Available Commands
