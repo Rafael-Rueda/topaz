@@ -1,5 +1,5 @@
 import type { ErrorObject } from "ajv";
-import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 import type { ISchemaRepository } from "../interfaces/schema-repository.interface.js";
@@ -21,9 +21,9 @@ export interface ValidatePayloadDeps {
 }
 
 // CJS/ESM interop: Ajv and ajv-formats need runtime unwrapping under NodeNext
-type AjvClass = InstanceType<typeof Ajv.default>;
+type AjvClass = InstanceType<typeof Ajv2020.default>;
 const AjvConstructor = (
-    Ajv as unknown as { default: new (opts: ConstructorParameters<typeof Ajv.default>[0]) => AjvClass }
+    Ajv2020 as unknown as { default: new (opts: ConstructorParameters<typeof Ajv2020.default>[0]) => AjvClass }
 ).default;
 const ajv = new AjvConstructor({ allErrors: true, strict: false });
 (addFormats as unknown as (ajv: AjvClass) => void)(ajv);

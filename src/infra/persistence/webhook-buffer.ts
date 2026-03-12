@@ -93,13 +93,15 @@ export class WebhookBuffer {
         } catch (pgError) {
             // Postgres failed — NOTHING was saved.
             // Reject all promises (500 to the emitter → emitter retries).
+            const errorMessage = (pgError as Error).message;
+            const errorStack = (pgError as Error).stack;
             this.deps.logger.error(
-                { error: (pgError as Error).message, count: batch.length },
+                { err: { message: errorMessage, stack: errorStack }, count: batch.length },
                 "Postgres batch insert failed — all events rejected",
             );
 
             for (const entry of batch) {
-                entry.reject(new Error("Failed to persist event"));
+                entry.reject(new Error(`Failed to persist event: ${errorMessage}`));
             }
         } finally {
             this.flushing = false;

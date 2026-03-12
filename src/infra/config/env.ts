@@ -22,6 +22,10 @@ const envSchema = z.object({
 
     // Database
     DATABASE_URL: z.string(),
+    DB_POOL_MAX: z.coerce.number().default(20),
+    DB_POOL_MIN: z.coerce.number().default(5),
+    DB_POOL_IDLE_TIMEOUT: z.coerce.number().default(30000),
+    DB_POOL_CONNECTION_TIMEOUT: z.coerce.number().default(5000),
 
     // Buffer (micro-batch)
     BUFFER_FLUSH_INTERVAL: z.coerce.number().default(50),

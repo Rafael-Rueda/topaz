@@ -44,7 +44,8 @@ async function sendRequest(id) {
             { timeout: 10000, validateStatus: () => true },
         );
         latencies.push(performance.now() - start);
-        if (res.status === 200) success++;
+        // 2xx status codes are success (202 = Accepted for webhooks)
+        if (res.status >= 200 && res.status < 300) success++;
         else {
             failed++;
             errors.set(`HTTP_${res.status}`, (errors.get(`HTTP_${res.status}`) || 0) + 1);
