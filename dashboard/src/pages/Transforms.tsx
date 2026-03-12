@@ -5,6 +5,7 @@ import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
 
 import {
+    activateTransform,
     createTransform,
     deactivateTransform,
     deleteTransformPermenant,
@@ -119,6 +120,15 @@ export function Transforms() {
         await load();
     };
 
+    const handleActivate = async (id: string) => {
+        try {
+            await activateTransform(id);
+        } catch {
+            // silent
+        }
+        await load();
+    };
+
     const handleDelete = async (id: string) => {
         if (!confirm("Permanently delete this transform? This cannot be undone.")) return;
         try {
@@ -209,12 +219,19 @@ export function Transforms() {
                                     >
                                         Edit
                                     </button>
-                                    {t.active && (
+                                    {t.active ? (
                                         <button
                                             onClick={() => handleDeactivate(t.id)}
                                             className="rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 font-medium text-amber-400 text-xs transition-all hover:bg-amber-500/20"
                                         >
                                             Deactivate
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleActivate(t.id)}
+                                            className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 font-medium text-emerald-400 text-xs transition-all hover:bg-emerald-500/20"
+                                        >
+                                            Activate
                                         </button>
                                     )}
                                     <button

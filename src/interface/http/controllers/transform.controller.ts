@@ -90,6 +90,22 @@ export class TransformController {
         reply.send(result);
     }
 
+    async activate(request: FastifyRequest<{ Params: TransformIdParams }>, reply: FastifyReply): Promise<void> {
+        const { id } = request.params;
+        const existing = await this.deps.transformRepository.findById(id);
+
+        if (!existing) {
+            reply.status(404).send({ error: "Transform not found", statusCode: 404 });
+            return;
+        }
+
+        const result = await this.deps.transformRepository.update(id, { active: true });
+
+        this.deps.logger.info({ id }, "Transform activated");
+
+        reply.send(result);
+    }
+
     async deactivate(request: FastifyRequest<{ Params: TransformIdParams }>, reply: FastifyReply): Promise<void> {
         const { id } = request.params;
         const existing = await this.deps.transformRepository.findById(id);

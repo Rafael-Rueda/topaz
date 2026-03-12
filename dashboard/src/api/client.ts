@@ -92,6 +92,7 @@ export const createTransform = (data: { source: string; eventType: string; mappi
 export const updateTransform = (id: string, data: { mapping?: Record<string, string>; active?: boolean }) =>
     api.put(`/transforms/${id}`, data).then((r) => r.data);
 export const deactivateTransform = (id: string) => api.delete(`/transforms/${id}`);
+export const activateTransform = (id: string) => api.post(`/transforms/${id}/activate`);
 export const deleteTransformPermenant = (id: string) => api.delete(`/transforms/${id}/permanent`);
 export const testTransform = (data: { source: string; eventType: string; payload: unknown }) =>
     api.post("/transforms/test", data).then((r) => r.data);

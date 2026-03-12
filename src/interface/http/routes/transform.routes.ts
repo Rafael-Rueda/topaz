@@ -96,6 +96,21 @@ export async function transformRoutes(app: FastifyInstance, container: AppContai
         async (request, reply) => transformController.update(request, reply),
     );
 
+    // POST /transforms/:id/activate — reactivate a deactivated transform
+    app.post<{ Params: { id: string } }>(
+        "/transforms/:id/activate",
+        {
+            schema: {
+                params: {
+                    type: "object",
+                    properties: { id: { type: "string" } },
+                    required: ["id"],
+                },
+            },
+        },
+        async (request, reply) => transformController.activate(request, reply),
+    );
+
     // DELETE /transforms/:id — deactivate (soft delete)
     app.delete<{ Params: { id: string } }>(
         "/transforms/:id",
