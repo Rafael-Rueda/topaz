@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -27,7 +27,7 @@ export function Overview() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             const overview = await fetchOverview();
@@ -38,7 +38,7 @@ export function Overview() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         load();

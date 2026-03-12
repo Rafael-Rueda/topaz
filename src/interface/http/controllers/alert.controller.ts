@@ -68,6 +68,18 @@ export class AlertController {
         reply.status(204).send();
     }
 
+    async deletePermanent(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply): Promise<void> {
+        const existing = await this.deps.alertRepository.findById(request.params.id);
+        if (!existing) {
+            reply.status(404).send({ error: "Alert rule not found", statusCode: 404 });
+            return;
+        }
+
+        await this.deps.alertRepository.delete(request.params.id);
+        this.deps.logger.info({ id: request.params.id, name: existing.name }, "Alert rule permanently deleted");
+        reply.status(204).send();
+    }
+
     async history(
         request: FastifyRequest<{ Querystring: { alertRuleId?: string; limit?: number } }>,
         reply: FastifyReply,

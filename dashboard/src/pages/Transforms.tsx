@@ -1,5 +1,5 @@
 import { Card, Title } from "@tremor/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
@@ -48,7 +48,7 @@ export function Transforms() {
         hasTransform: boolean;
     } | null>(null);
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchTransforms();
@@ -58,7 +58,7 @@ export function Transforms() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         load();

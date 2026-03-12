@@ -1,10 +1,18 @@
 import { Card, Title } from "@tremor/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
 
-import { createAlert, deleteAlert, fetchAlertHistory, fetchAlerts, updateAlert } from "@/api/client";
+import {
+    activateAlert,
+    createAlert,
+    deleteAlert,
+    deleteAlertPermanent,
+    fetchAlertHistory,
+    fetchAlerts,
+    updateAlert,
+} from "@/api/client";
 
 interface AlertRule {
     id: string;
@@ -54,7 +62,7 @@ export function Alerts() {
         cooldown: "15m",
     });
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             const [rulesData, historyData] = await Promise.all([fetchAlerts(), fetchAlertHistory({ limit: 50 })]);
@@ -65,7 +73,7 @@ export function Alerts() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         load();
@@ -97,9 +105,32 @@ export function Alerts() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        await deleteAlert(id);
-        load();
+    const handleDeactivate = async (id: string) => {
+        try {
+            await deleteAlert(id);
+        } catch {
+            // silent
+        }
+        await load();
+    };
+
+    const handleActivate = async (id: string) => {
+        try {
+            await activateAlert(id);
+        } catch {
+            // silent
+        }
+        await load();
+    };
+
+    const handleDeletePermanent = async (id: string) => {
+        if (!confirm("Permanently delete this alert rule? This cannot be undone.")) return;
+        try {
+            await deleteAlertPermanent(id);
+        } catch {
+            // silent
+        }
+        await load();
     };
 
     return (
@@ -181,18 +212,37 @@ export function Alerts() {
                                             </p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => setEditingRule(rule)}
-                                        className="rounded-md border border-topaz-500/20 bg-topaz-500/10 px-3 py-1.5 font-medium text-topaz-400 text-xs transition-all hover:bg-topaz-500/20"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(rule.id)}
-                                        className="rounded-md border border-red-500/20 bg-red-500/10 px-3 py-1.5 font-medium text-red-400 text-xs transition-all hover:bg-red-500/20"
-                                    >
-                                        Deactivate
-                                    </button>
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            onClick={() => setEditingRule(rule)}
+                                            className="rounded-md border border-topaz-500/20 bg-topaz-500/10 px-3 py-1.5 font-medium text-topaz-400 text-xs transition-all hover:bg-topaz-500/20"
+                                        >
+                                            Edit
+                                        </button>
+                                        {rule.active ? (
+                                            <button
+                                                onClick={() => handleDeactivate(rule.id)}
+                                                className="rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 font-medium text-amber-400 text-xs transition-all hover:bg-amber-500/20"
+                                            >
+                                                Deactivate
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => handleActivate(rule.id)}
+                                                    className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 font-medium text-emerald-400 text-xs transition-all hover:bg-emerald-500/20"
+                                                >
+                                                    Activate
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeletePermanent(rule.id)}
+                                                    className="rounded-md border border-red-500/20 bg-red-500/10 px-3 py-1.5 font-medium text-red-400 text-xs transition-all hover:bg-red-500/20"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </Card>
                         ))

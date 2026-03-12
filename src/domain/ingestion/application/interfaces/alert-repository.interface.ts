@@ -46,6 +46,7 @@ export interface IAlertRepository {
     findActive(): Promise<AlertRuleProps[]>;
     update(id: string, input: UpdateAlertInput): Promise<AlertRuleProps>;
     deactivate(id: string): Promise<void>;
+    delete(id: string): Promise<void>;
     createHistory(alertRuleId: string, metricValue: number, message: string): Promise<AlertHistoryProps>;
     findHistory(alertRuleId?: string, limit?: number): Promise<AlertHistoryProps[]>;
     findLastFired(alertRuleId: string): Promise<AlertHistoryProps | null>;

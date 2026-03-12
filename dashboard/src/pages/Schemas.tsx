@@ -1,5 +1,5 @@
 import { Card, Title } from "@tremor/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
@@ -30,7 +30,7 @@ export function Schemas() {
         rejectOnFail: false,
     });
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchSchemas();
@@ -40,7 +40,7 @@ export function Schemas() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         load();

@@ -1,5 +1,5 @@
 import { Card, ProgressBar, Title } from "@tremor/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
@@ -44,7 +44,7 @@ export function Replay() {
         to: "",
     });
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchReplayHistory();
@@ -54,7 +54,7 @@ export function Replay() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         load();

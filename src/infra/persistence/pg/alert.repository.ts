@@ -61,6 +61,10 @@ export class PrismaAlertRepository implements IAlertRepository {
         await this.prisma.alertRule.update({ where: { id }, data: { active: false } });
     }
 
+    async delete(id: string): Promise<void> {
+        await this.prisma.alertRule.delete({ where: { id } });
+    }
+
     async createHistory(alertRuleId: string, metricValue: number, message: string): Promise<AlertHistoryProps> {
         const history = await this.prisma.alertHistory.create({
             data: { alertRuleId, metricValue, message },

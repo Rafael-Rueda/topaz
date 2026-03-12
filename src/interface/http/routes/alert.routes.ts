@@ -109,4 +109,19 @@ export async function alertRoutes(app: FastifyInstance, container: AppContainer)
         },
         async (request, reply) => alertController.deactivate(request, reply),
     );
+
+    // DELETE /alerts/:id/permanent — permanently delete alert rule
+    app.delete<{ Params: { id: string } }>(
+        "/alerts/:id/permanent",
+        {
+            schema: {
+                params: {
+                    type: "object",
+                    properties: { id: { type: "string" } },
+                    required: ["id"],
+                },
+            },
+        },
+        async (request, reply) => alertController.deletePermanent(request, reply),
+    );
 }

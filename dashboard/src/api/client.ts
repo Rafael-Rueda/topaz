@@ -33,6 +33,8 @@ export const createAlert = (data: {
 export const updateAlert = (id: string, data: Record<string, unknown>) =>
     api.put(`/alerts/${id}`, data).then((r) => r.data);
 export const deleteAlert = (id: string) => api.delete(`/alerts/${id}`);
+export const activateAlert = (id: string) => api.put(`/alerts/${id}`, { active: true });
+export const deleteAlertPermanent = (id: string) => api.delete(`/alerts/${id}/permanent`);
 export const fetchAlertHistory = (params?: { alertRuleId?: string; limit?: number }) =>
     api.get("/alerts/history", { params }).then((r) => r.data);
 

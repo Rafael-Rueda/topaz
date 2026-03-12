@@ -1,5 +1,5 @@
 import { Card, Title } from "@tremor/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge } from "@/components/Badge";
 import { PageHeader } from "@/components/PageHeader";
@@ -39,7 +39,7 @@ export function Sources() {
         rateLimitWindow: "",
     });
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             setLoading(true);
             const data = await fetchSources();
@@ -49,7 +49,7 @@ export function Sources() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         load();
