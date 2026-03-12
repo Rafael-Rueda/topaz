@@ -1,0 +1,39 @@
+{
+    "name": "@rueda.dev/gems-topaz",
+    "version": "1.0.0",
+    "description": "Topaz - High-Volatility Ingestion & Refining Unit by Rueda Gems",
+    "author": "Rueda.dev",
+    "license": "MIT",
+    "bin": {
+        "gems-topaz": "./bin/create.js",
+        "create-topaz": "./bin/create.js"
+    },
+    "files": [
+        "bin",
+        "template"
+    ],
+    "keywords": [
+        "fastify",
+        "bullmq",
+        "ddd",
+        "domain-driven-design",
+        "webhooks",
+        "ingestion",
+        "event-streaming",
+        "template",
+        "scaffold",
+        "typescript",
+        "prisma",
+        "postgresql",
+        "redis",
+        "rueda.dev"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rafael-rueda/topaz"
+    },
+    "homepage": "https://gems.rueda.dev",
+    "engines": {
+        "node": ">=20.0.0"
+    }
+}

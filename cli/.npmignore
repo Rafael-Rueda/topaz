@@ -1,0 +1,32 @@
+# Development files
+*.md
+!template/**/*.md
+
+# Source control
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# Test files
+*.spec.ts
+*.test.ts
+__tests__
+
+# Build artifacts
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env
+.env
+.env.*
+!.env.example

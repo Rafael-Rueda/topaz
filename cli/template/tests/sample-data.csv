@@ -1,0 +1,11 @@
+id,name,email,phone,amount,status,created_at
+1,John Doe,john@example.com,+5511999990001,150.00,active,2024-01-01
+2,Jane Smith,jane@example.com,+5511999990002,250.50,active,2024-01-02
+3,Bob Wilson,bob@example.com,+5511999990003,75.25,pending,2024-01-03
+4,Alice Brown,alice@example.com,+5511999990004,300.00,active,2024-01-04
+5,Charlie Davis,charlie@example.com,+5511999990005,125.75,inactive,2024-01-05
+6,Diana Ross,diana@example.com,+5511999990006,450.00,active,2024-01-06
+7,Edward King,edward@example.com,+5511999990007,200.00,pending,2024-01-07
+8,Fiona Apple,fiona@example.com,+5511999990008,175.50,active,2024-01-08
+9,George Lucas,george@example.com,+5511999990009,525.00,active,2024-01-09
+10,Helen Troy,helen@example.com,+5511999990010,100.00,inactive,2024-01-10
